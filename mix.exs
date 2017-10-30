@@ -42,7 +42,7 @@ Command auditing middleware for Commanded CQRS/ES applications
 
   defp deps do
     [
-      {:commanded, "~> 0.14", runtime: false},
+      {:commanded, git: "https://github.com/slashdotdash/commanded.git", branch: "master", runtime: false},
       {:ecto, "~> 2.2"},
       {:ex_doc, "~> 0.17", only: :dev},
       {:mix_test_watch, "~> 0.5", only: :dev},

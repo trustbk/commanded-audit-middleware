@@ -9,9 +9,11 @@ defmodule Commanded.Middleware.Auditing do
   import Ecto.Query, only: [from: 2]
 
   def before_dispatch(%Pipeline{} = pipeline) do
+    command_uuid = UUID.uuid4
     pipeline
-    |> assign(:command_uuid, UUID.uuid4)
+    |> assign(:command_uuid, command_uuid)
     |> assign(:occurred_at, DateTime.utc_now)
+    |> assign_metadata(:command_uuid, command_uuid)
     |> audit()
   end
 

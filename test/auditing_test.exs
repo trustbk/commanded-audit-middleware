@@ -19,6 +19,10 @@ defmodule Commanded.Middleware.AuditingTest do
       assert audit != nil
       assert audit.success == nil
     end
+
+    test "should put the command uuid inside metadata", %{pipeline: pipeline} do
+      assert pipeline.metadata.command_uuid != nil
+    end
   end
 
   describe "after successful command dispatch" do
@@ -56,6 +60,7 @@ defmodule Commanded.Middleware.AuditingTest do
 
   defp execute_before_dispatch(_context) do
     [pipeline: Auditing.before_dispatch(%Pipeline{
+      metadata: %{},
       assigns: %{user: "user@example.com"},
       command: %Command{name: "Ben", age: 34},
     })]
