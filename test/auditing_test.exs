@@ -34,6 +34,10 @@ defmodule Commanded.Middleware.AuditingTest do
       assert audit.error_reason == nil
       assert audit.execution_duration_usecs > 0
     end
+
+    test "should have saved metadata", %{audit: audit} do
+      assert deserialize(audit.metadata)["added_after_before_dispatch"] == "test"
+    end
   end
 
   describe "after failed command dispatch" do
@@ -44,6 +48,10 @@ defmodule Commanded.Middleware.AuditingTest do
       assert audit.error == ":failed"
       assert audit.error_reason == "\"failure\""
       assert audit.execution_duration_usecs > 0
+    end
+
+    test "should have saved metadata", %{audit: audit} do
+      assert deserialize(audit.metadata)["added_after_before_dispatch"] == "test"
     end
   end
 
@@ -56,6 +64,10 @@ defmodule Commanded.Middleware.AuditingTest do
       assert audit.error_reason == nil
       assert audit.execution_duration_usecs > 0
     end
+
+    test "should have saved metadata", %{audit: audit} do
+      assert deserialize(audit.metadata)["added_after_before_dispatch"] == "test"
+    end
   end
 
   defp execute_before_dispatch(_context) do
@@ -67,12 +79,14 @@ defmodule Commanded.Middleware.AuditingTest do
   end
 
   defp execute_after_dispatch(%{pipeline: pipeline}) do
+    pipeline = Pipeline.assign_metadata(pipeline, :added_after_before_dispatch, "test")
     [pipeline: Auditing.after_dispatch(pipeline)]
   end
 
   defp execute_after_failure(%{pipeline: pipeline}) do
     pipeline =
       pipeline
+      |> Pipeline.assign_metadata(:added_after_before_dispatch, "test")
       |> Pipeline.assign(:error, :failed)
       |> Pipeline.assign(:error_reason, "failure")
       |> Auditing.after_failure
@@ -83,6 +97,7 @@ defmodule Commanded.Middleware.AuditingTest do
   defp execute_after_failure_no_reason(%{pipeline: pipeline}) do
     pipeline =
       pipeline
+      |> Pipeline.assign_metadata(:added_after_before_dispatch, "test")
       |> Pipeline.assign(:error, :failed)
       |> Auditing.after_failure
 
@@ -91,5 +106,11 @@ defmodule Commanded.Middleware.AuditingTest do
 
   defp get_audit(%{pipeline: pipeline}) do
     [audit: Repo.get(CommandAudit, pipeline.assigns.command_uuid)]
+  end
+
+  defp deserialize(term), do: serializer().deserialize(term, [])
+
+  defp serializer do
+    Application.get_env(:commanded_audit_middleware, :serializer)
   end
 end

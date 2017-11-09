@@ -41,18 +41,19 @@ defmodule Commanded.Middleware.Auditing do
     pipeline
   end
 
-  defp success(%Pipeline{assigns: %{command_uuid: command_uuid}} = pipeline) do
+  defp success(%Pipeline{assigns: %{command_uuid: command_uuid}, metadata: metadata} = pipeline) do
     command_uuid
     |> query_by_command_uuid
     |> Repo.update_all(set: [
         success: true,
         execution_duration_usecs: delta(pipeline),
+        metadata: serialize(metadata)
       ])
 
     pipeline
   end
 
-  defp failure(%Pipeline{assigns: %{command_uuid: command_uuid}} = pipeline) do
+  defp failure(%Pipeline{assigns: %{command_uuid: command_uuid}, metadata: metadata} = pipeline) do
     command_uuid
     |> query_by_command_uuid
     |> Repo.update_all(set: [
@@ -60,6 +61,7 @@ defmodule Commanded.Middleware.Auditing do
         execution_duration_usecs: delta(pipeline),
         error: extract(pipeline, :error),
         error_reason: extract(pipeline, :error_reason),
+        metadata: serialize(metadata)
       ])
 
     pipeline
